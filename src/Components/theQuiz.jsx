@@ -3,11 +3,13 @@ import axios from 'axios';
 import TheAnswer from './TheAnswer';
 import TheQuestion from './TheQuestion'
 
-// let Answer = `characters/16`
+let index = 5;
+let answer;
 let QuestionAnswer = [
-  { Question: "Where was Margaery Tyrell born?", 
+  {
+    Question: "Where was Margaery Tyrell born?",
     Answer: "characters/16",
-    Path: String.raw`born`
+    Path: `born`
   },
   {
     Question: "What region is House Targaryen in?",
@@ -32,11 +34,14 @@ let QuestionAnswer = [
   {
     Question: "What's the name of the founder of House Stark?",
     Answer: "houses/362",
-    Path: "founder.name"
+    Path: "founder",
+    url: null,
+    pathToName: "name"
   },
   {
     Question: "What are the titles of Catelyn Stark's three POV books?",
-    Answer: "characters/232"},
+    Answer: "characters/232"
+  },
 ]
 
 class TheQuiz extends Component {
@@ -45,28 +50,59 @@ class TheQuiz extends Component {
 
     this.state = {
       data: [],
+      url: null
     }
-        
+
   }
-  // for (const [key, value] of Object.entries(object1)) {
-  //   console.log(`${key}: ${value}`);
-  // }
+
+  async getResponses() {
+    try {
+      let response = await axios.get(`http://anapioficeandfire.com/api/${QuestionAnswer[index].Answer}`)
+      let gotData = response.data;
+      let myKey = QuestionAnswer[index].Path;
+      for(const [key, value] of Object.entries(gotData)) {
+        if (key === myKey) {
+          answer = value;
+        }
+      }
+      if(index === 5) {
+        this.setState({
+          url: answer
+        })
+      }
+      this.setState({
+        data: answer
+      })
+    } catch (error) {
+      console.error(error.message)
+    }
+  }
+
+
+  async getNumber6() {
+    try {
+      let secondResponse = await axios.get(answer)
+      let gotData = secondResponse.data;
+      let myKey = QuestionAnswer[index].pathToName;
+      for(const [key, value] of Object.entries(gotData)) {
+        if (key === myKey) {
+          answer = value;
+        }
+      }
+      this.setState({
+        data: answer
+      })
+    } catch (error) {
+      console.error(error.message)
+    }
+  }
+
 
   componentDidMount() {
-    axios.get(`http://anapioficeandfire.com/api/${QuestionAnswer[1].Answer}`)
-      .then(response => {
-        const gotData = response.data;
-        let myKey = QuestionAnswer[1].Path;
-        let answer;
-        for (const [key, value] of Object.entries(gotData)) {
-          if (key === myKey){
-            answer = value;
-          }
-        }
-        this.setState({
-          data: answer
-        })
-      })
+    this.getResponses();
+    if(this.state.data.url){
+      this.getNumber6();
+    }
   }
 
 
@@ -75,10 +111,10 @@ class TheQuiz extends Component {
     return (
       <div>
         <TheQuestion
-        question={QuestionAnswer[1].Question}
+          question={QuestionAnswer[index].Question}
         />
         <TheAnswer
-         answer={this.state.data}
+          answer={this.state.data}
         />
       </div>
     );
